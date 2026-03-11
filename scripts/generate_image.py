@@ -4,11 +4,12 @@
 # dependencies = [
 #     "openai>=1.0.0",
 #     "pillow>=10.0.0",
+#     "python-dotenv>=1.0.0",
 #     "requests",
 # ]
 # ///
 """
-Generate images using Doubao-Seedream-4.0 via Paratera API.
+Generate images via Paratera API (model selected by env).
 
 Usage:
     uv run generate_image.py --prompt "your image description" --filename "output.png" [--resolution 1K|2K|4K]
@@ -16,10 +17,12 @@ Usage:
 
 import argparse
 import base64
+import os
 import sys
 from io import BytesIO
 from pathlib import Path
 
+from dotenv import load_dotenv
 
 # Resolution mapping
 RESOLUTION_MAP = {
@@ -31,7 +34,7 @@ RESOLUTION_MAP = {
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Generate images using Doubao-Seedream-4.0"
+        description="Generate images via Paratera API"
     )
     parser.add_argument(
         "--prompt", "-p",
@@ -55,10 +58,29 @@ def main():
     from openai import OpenAI
     from PIL import Image as PILImage
 
+    load_dotenv()
+    api_key = os.getenv("OPENAI_API_KEY")
+    base_url = os.getenv("OPENAI_BASE_URL")
+    model = os.getenv("IMAGE_MODEL") or "Doubao-Seedream-4.0"
+
+    missing = []
+    if not api_key:
+        missing.append("OPENAI_API_KEY")
+    if not base_url:
+        missing.append("OPENAI_BASE_URL")
+    if missing:
+        missing_list = ", ".join(missing)
+        print(
+            f"Missing required environment variables: {missing_list}. "
+            "Set them in your .env file.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
     # Initialise OpenAI-compatible client
     client = OpenAI(
-        base_url="https://llmapi.paratera.com/v1",
-        api_key="api",
+        base_url=base_url,
+        api_key=api_key,
     )
 
     # Set up output path
@@ -70,7 +92,7 @@ def main():
 
     try:
         response = client.images.generate(
-            model="Doubao-Seedream-4.0",
+            model=model,
             prompt=args.prompt,
             size=size,
         )
