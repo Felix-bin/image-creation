@@ -58,7 +58,7 @@ def main():
     # Initialise OpenAI-compatible client
     client = OpenAI(
         base_url="https://llmapi.paratera.com/v1",
-        api_key="sk-364vecBJmBb7ViF7qsc5zQ",
+        api_key="api",
     )
 
     # Set up output path
